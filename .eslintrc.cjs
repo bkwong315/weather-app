@@ -28,8 +28,9 @@ module.exports = {
     // Add your own rules here to override ones from the extended configs.
     // From https://stackoverflow.com/questions/42640636/react-must-be-in-scope-when-using-jsx-react-react-in-jsx-scope
     // suppress errors for missing 'import React' in files
-   "react/react-in-jsx-scope": "off",
-   // allow jsx syntax in js files (for next.js project)
-  "react/jsx-filename-extension": [1, { "extensions": [".ts", ".tsx"] }], //should add ".ts" if typescript project
+    'react/react-in-jsx-scope': 'off',
+    // allow jsx syntax in js files (for next.js project)
+    'react/jsx-filename-extension': [1, { extensions: ['.ts', '.tsx'] }], //should add ".ts" if typescript project
+    '@typescript-eslint/no-explicit-any': 'off',
   },
 };
