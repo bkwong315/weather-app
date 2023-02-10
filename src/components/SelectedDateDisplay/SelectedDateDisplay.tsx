@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import SelectedDateTemplate from '../../interfaces/SelectedDateDisplay';
 import './SelectedDateDisplay.scss';
 
