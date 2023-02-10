@@ -30,6 +30,9 @@
 
 .attribution {
   position: absolute;
+  display: flex;
+  justify-content: space-between;
+  min-width: 100vw;
   color: white;
   bottom: 0;
 
