@@ -19,6 +19,10 @@
     font-weight: 700;
     background-color: transparent;
 
+    &::placeholder {
+      color: white;
+    }
+
     &:focus-visible {
       outline: transparent;
     }
