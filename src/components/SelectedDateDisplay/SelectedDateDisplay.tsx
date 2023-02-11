@@ -19,6 +19,15 @@ function SelectedDateDisplay(props: { info: SelectedDateTemplate }) {
     windDeg,
   } = props.info;
 
+  function getSector(deg: number) {
+    const sectors = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const directionalUnit = 45;
+
+    console.log(sectors[Math.floor(deg / directionalUnit)]);
+
+    return sectors[Math.floor(deg / directionalUnit)];
+  }
+
   return (
     <div className="selected-date-container">
       <p className="description">{description}</p>
@@ -36,7 +45,7 @@ function SelectedDateDisplay(props: { info: SelectedDateTemplate }) {
           <div className="wind-wrapper">
             <p>Wind:</p>
             <p>
-              {wind} {windUnit} {windDeg}
+              {wind} {windUnit} {getSector(parseInt(windDeg))}
             </p>
           </div>
           <div className="precipitation-wrapper">
