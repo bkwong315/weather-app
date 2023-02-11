@@ -9,4 +9,27 @@
   gap: 0.5rem;
   right: 0;
   margin: 1rem;
+  background: rgba(160, 160, 160, 0.7);
+  padding: 0.5rem;
+  border-radius: 4px;
+
+  input {
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    background-color: transparent;
+
+    &:focus-visible {
+      outline: transparent;
+    }
+  }
+
+  img {
+    width: 1rem;
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.15);
+    }
+  }
 }

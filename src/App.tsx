@@ -13,7 +13,7 @@ function App() {
 
   useEffect(() => {
     const cityInput = document.querySelector('#city') as HTMLInputElement;
-    const submitBtn = document.querySelector('#city ~ button');
+    const submitBtn = document.querySelector('#city ~ img');
 
     submitBtn?.addEventListener('click', submitQuery);
 
@@ -99,7 +99,7 @@ function App() {
     <div className="App">
       <div className="input-container">
         <input type="text" name="city" id="city" placeholder="Enter City" />
-        <button>Submit</button>
+        <img src="./src/imgs/search.svg" alt="search" className="submit-btn" />
       </div>
       {!loading && <SelectedDateDisplay info={selectedDate as SelectedDateTemplate} />}
     </div>
