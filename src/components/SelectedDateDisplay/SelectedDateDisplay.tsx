@@ -23,8 +23,6 @@ function SelectedDateDisplay(props: { info: SelectedDateTemplate }) {
     const sectors = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const directionalUnit = 45;
 
-    console.log(sectors[Math.floor(deg / directionalUnit)]);
-
     return sectors[Math.floor(deg / directionalUnit)];
   }
 

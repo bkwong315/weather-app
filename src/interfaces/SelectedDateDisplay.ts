@@ -1,4 +1,5 @@
 interface SelectedDateTemplate {
+  dt: string;
   iconURL: string;
   description: string;
   city: string;

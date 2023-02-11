@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 
 import SelectedDateTemplate from './interfaces/SelectedDateDisplay';
 import SelectedDateDisplay from './components/SelectedDateDisplay/SelectedDateDisplay';
+import ForecastList from './components/ForecastList/ForecastList';
 import './App.scss';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedDate, setSelectedDate] = useState<SelectedDateTemplate>();
+  const [forecastData, setForecastData] = useState<Array<SelectedDateTemplate>>();
 
   const units = 'imperial';
   const API_KEY = 'a8d2cbc847ed40ce311d65394e47f905';
@@ -53,7 +55,7 @@ function App() {
         console.error(error);
       });
 
-      updateSelectedDateData(weatherData);
+      updateData(weatherData);
     }
 
     sendQuery('london');
@@ -84,10 +86,18 @@ function App() {
       [],
     );
 
+    setForecastData(
+      // @ts-expect-error : Not sure how to fix error
+      reducedList.slice(1).reduce((arr: Array<T>, data) => {
+        arr.push(formatData(weatherData, data));
+        return arr;
+      }, []),
+    );
+
     return reducedList;
   }
 
-  function updateSelectedDateData(weatherData: { list: []; city: { name: string; country: string } }) {
+  function updateData(weatherData: { list: []; city: { name: string; country: string } }) {
     // @ts-expect-error : Not sure how to fix error
     const forecast: Array<{
       weather: Array<{ description: string; icon: string }>;
@@ -96,24 +106,28 @@ function App() {
       wind: { speed: string; deg: string };
     }> = getFiveDayForecast(weatherData);
 
-    setSelectedDate({
-      iconURL: `./src/imgs/weather-icons/${forecast[0].weather[0].icon}.svg`,
-      description: forecast[0].weather[0].description,
-      city: weatherData.city.name,
-      country: weatherData.city.country,
-      temp: Math.floor(parseFloat(forecast[0].main.temp)).toString(),
-      feelsLike: Math.floor(parseFloat(forecast[0].main.feels_like)).toString(),
-      tempMin: Math.floor(parseFloat(forecast[0].main.temp_min)).toString(),
-      tempMax: Math.floor(parseFloat(forecast[0].main.temp_max)).toString(),
-      tempUnit: 'F',
-      precipitation: forecast[0].pop,
-      humidity: forecast[0].main.humidity,
-      wind: (Math.floor(parseFloat(forecast[0].wind.speed) * 10) / 10).toString(),
-      windUnit: 'mph',
-      windDeg: forecast[0].wind.deg,
-    });
-
+    setSelectedDate(formatData(weatherData, forecast[0]));
     setLoading(false);
+  }
+
+  function formatData(response: any, day: any) {
+    return {
+      dt: day.dt,
+      iconURL: `./src/imgs/weather-icons/${day.weather[0].icon}.svg`,
+      description: day.weather[0].description,
+      city: response.city.name,
+      country: response.city.country,
+      temp: Math.floor(parseFloat(day.main.temp)).toString(),
+      feelsLike: Math.floor(parseFloat(day.main.feels_like)).toString(),
+      tempMin: Math.floor(parseFloat(day.main.temp_min)).toString(),
+      tempMax: Math.floor(parseFloat(day.main.temp_max)).toString(),
+      tempUnit: 'F',
+      precipitation: day.pop,
+      humidity: day.main.humidity,
+      wind: (Math.floor(parseFloat(day.wind.speed) * 10) / 10).toString(),
+      windUnit: 'mph',
+      windDeg: day.wind.deg,
+    };
   }
 
   return (
@@ -125,6 +139,7 @@ function App() {
         <span className="error">Error!</span>
       </form>
       {!loading && <SelectedDateDisplay info={selectedDate as SelectedDateTemplate} />}
+      {!loading && <ForecastList forecastData={forecastData as Array<SelectedDateTemplate>} />}
     </div>
   );
 }
