@@ -12,39 +12,60 @@ function App() {
   const API_KEY = 'a8d2cbc847ed40ce311d65394e47f905';
 
   useEffect(() => {
+    const searchForm = document.querySelector('.search-container');
     const cityInput = document.querySelector('#city') as HTMLInputElement;
-    const submitBtn = document.querySelector('#city ~ img');
+    const searchIcon = document.querySelector('#city ~ img');
+    const errorDisplay = document.querySelector('.error');
 
-    submitBtn?.addEventListener('click', submitQuery);
+    searchForm?.addEventListener('submit', formSubmit);
+    searchIcon?.addEventListener('click', submitQuery);
+
+    function formSubmit(event: Event) {
+      event.preventDefault();
+      submitQuery();
+    }
 
     async function submitQuery() {
       const query = cityInput.value;
       sendQuery(query);
     }
 
+    async function sendQuery(query: string) {
+      errorDisplay?.classList.remove('visible');
+
+      const geocodeData = await fetchData(
+        `http://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=1&appid=${API_KEY}`,
+      ).catch((error) => {
+        console.error(error);
+      });
+
+      if (geocodeData.length === 0) {
+        if (errorDisplay) {
+          errorDisplay.classList.add('visible');
+          errorDisplay.textContent = 'Invalid input. Please enter a valid city or country.';
+          return;
+        }
+      }
+
+      const weatherData = await fetchData(
+        `http://api.openweathermap.org/data/2.5/forecast?lat=${geocodeData[0].lat}&lon=${geocodeData[0].lon}&units=${units}&appid=${API_KEY}`,
+      ).catch((error) => {
+        console.error(error);
+      });
+
+      updateSelectedDateData(weatherData);
+    }
+
     sendQuery('london');
 
-    return () => submitBtn?.removeEventListener('click', submitQuery);
+    return function cleanup() {
+      searchForm?.removeEventListener('submit', formSubmit);
+      searchIcon?.removeEventListener('click', submitQuery);
+    };
   }, []);
 
-  async function sendQuery(query: string) {
-    const geocodeData = await fetchData(
-      `http://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=1&appid=${API_KEY}`,
-    );
-    const weatherData = await fetchData(
-      `http://api.openweathermap.org/data/2.5/forecast?lat=${geocodeData[0].lat}&lon=${geocodeData[0].lon}&units=${units}&appid=${API_KEY}`,
-    );
-
-    updateSelectedDateData(weatherData);
-  }
-
   async function fetchData(apiURL: string) {
-    let response;
-    try {
-      response = await fetch(apiURL);
-    } catch (err) {
-      console.log(err);
-    }
+    const response = await fetch(apiURL);
 
     return await response?.json();
   }
@@ -97,10 +118,12 @@ function App() {
 
   return (
     <div className="App">
-      <div className="input-container">
-        <input type="text" name="city" id="city" placeholder="Enter City" />
+      <form className="search-container">
+        <input type="text" name="city" id="city" placeholder="Enter City or Country" autoComplete="off" />
         <img src="./src/imgs/search.svg" alt="search" className="submit-btn" />
-      </div>
+        <button type="submit"></button>
+        <span className="error">Error!</span>
+      </form>
       {!loading && <SelectedDateDisplay info={selectedDate as SelectedDateTemplate} />}
     </div>
   );

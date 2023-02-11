@@ -3,9 +3,11 @@
   justify-items: center;
 }
 
-.input-container {
+.search-container {
   position: absolute;
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
   gap: 0.5rem;
   right: 0;
   margin: 1rem;
@@ -20,7 +22,7 @@
     background-color: transparent;
 
     &::placeholder {
-      color: white;
+      color: #fff;
     }
 
     &:focus-visible {
@@ -35,5 +37,22 @@
     &:hover {
       transform: scale(1.15);
     }
+  }
+
+  button {
+    display: none;
+  }
+
+  .error {
+    visibility: hidden;
+    position: absolute;
+    bottom: -0.25rem;
+    transform: translateY(100%);
+    color: white;
+    font-size: 0.85rem;
+  }
+
+  .visible {
+    visibility: visible;
   }
 }
