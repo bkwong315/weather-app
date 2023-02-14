@@ -58,7 +58,7 @@ function App() {
       updateData(weatherData);
     }
 
-    sendQuery('london');
+    sendQuery('los angeles');
 
     return function cleanup() {
       searchForm?.removeEventListener('submit', formSubmit);
@@ -75,9 +75,9 @@ function App() {
   function getFiveDayForecast(weatherData: { list: []; city: object }) {
     const reducedList = weatherData.list.reduce(
       (weatherTimestamps: { dt_txt: string }[], currentTimestamp: { dt_txt: string }) => {
-        const newDate = weatherTimestamps.every(
-          (timestamp) => timestamp.dt_txt.split(' ')[0] !== currentTimestamp.dt_txt.split(' ')[0],
-        );
+        const newDate = weatherTimestamps
+          .slice(1)
+          .every((timestamp) => timestamp.dt_txt.split(' ')[0] !== currentTimestamp.dt_txt.split(' ')[0]);
 
         if (newDate) weatherTimestamps.push(currentTimestamp);
 
@@ -88,7 +88,7 @@ function App() {
 
     setForecastData(
       // @ts-expect-error : Not sure how to fix error
-      reducedList.slice(1).reduce((arr: Array<T>, data) => {
+      reducedList.slice(2).reduce((arr: Array<T>, data) => {
         arr.push(formatData(weatherData, data));
         return arr;
       }, []),
@@ -106,13 +106,16 @@ function App() {
       wind: { speed: string; deg: string };
     }> = getFiveDayForecast(weatherData);
 
+    console.log(weatherData);
+
+    // @ts-expect-error : Not sure how to fix error
     setSelectedDate(formatData(weatherData, forecast[0]));
     setLoading(false);
   }
 
   function formatData(response: any, day: any) {
     return {
-      dt: day.dt,
+      dt: (parseInt(day.dt, 10) + parseInt(response.city.timezone, 10)) * 1000,
       iconURL: `./src/imgs/weather-icons/${day.weather[0].icon}.svg`,
       description: day.weather[0].description,
       city: response.city.name,
