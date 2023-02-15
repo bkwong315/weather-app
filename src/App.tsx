@@ -100,7 +100,6 @@ function App() {
   }
 
   function getFiveDayForecast(weatherData: ForecastResponse): { [key: string]: WeatherData[] } {
-    console.log(weatherData);
     const aggregateTimestamps = weatherData.list.reduce(
       (weatherTimestamps: { [key: string]: WeatherData[] }, currentTimestamp: WeatherData) => {
         const timestampDay = new Date(
@@ -135,8 +134,6 @@ function App() {
     for (const day in aggregateTimestamps) {
       for (const timestamp of aggregateTimestamps[day]) {
         if (timestamp.dt_txt.split(' ')[1].split(':')[0] === '12') {
-          console.log(timestamp.dt);
-          console.log(Date.now().valueOf());
           forecastList.push({
             dt: String((parseInt(timestamp.dt, 10) + parseInt(timezone, 10)) * 1000),
             iconURL: `./src/imgs/weather-icons/${timestamp.weather[0].icon}.svg`,
