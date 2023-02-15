@@ -1,16 +1,21 @@
 import { useEffect, useState } from 'react';
 
+import WeatherData from './interfaces/WeatherData';
+import CurrentWeatherResponse from './interfaces/CurrentWeatherData';
+import ForecastResponse from './interfaces/ForecastResponse';
+import ForecastListData from './interfaces/ForecastListData';
 import SelectedDateTemplate from './interfaces/SelectedDateDisplay';
+
 import SelectedDateDisplay from './components/SelectedDateDisplay/SelectedDateDisplay';
 import ForecastList from './components/ForecastList/ForecastList';
 import './App.scss';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
+  const [units, setUnits] = useState({ system: 'imperial', tempUnit: 'F', windUnit: 'mph' });
   const [selectedDate, setSelectedDate] = useState<SelectedDateTemplate>();
-  const [forecastData, setForecastData] = useState<Array<SelectedDateTemplate>>();
+  const [forecastData, setForecastData] = useState<Array<ForecastListData>>();
 
-  const units = 'imperial';
   const API_KEY = 'a8d2cbc847ed40ce311d65394e47f905';
 
   useEffect(() => {
@@ -49,13 +54,19 @@ function App() {
         }
       }
 
-      const weatherData = await fetchData(
-        `http://api.openweathermap.org/data/2.5/forecast?lat=${geocodeData[0].lat}&lon=${geocodeData[0].lon}&units=${units}&appid=${API_KEY}`,
+      const currentWeatherData = await fetchData(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${geocodeData[0].lat}&lon=${geocodeData[0].lon}&units=${units.system}&appid=${API_KEY}`,
       ).catch((error) => {
         console.error(error);
       });
 
-      updateData(weatherData);
+      const weatherData = await fetchData(
+        `http://api.openweathermap.org/data/2.5/forecast?lat=${geocodeData[0].lat}&lon=${geocodeData[0].lon}&units=${units.system}&appid=${API_KEY}`,
+      ).catch((error) => {
+        console.error(error);
+      });
+
+      updateData(currentWeatherData, weatherData);
     }
 
     sendQuery('los angeles');
@@ -66,71 +77,120 @@ function App() {
     };
   }, []);
 
+  function updateData(currentWeatherData: CurrentWeatherResponse, weatherData: ForecastResponse) {
+    const fiveDayForecast = getFiveDayForecast(weatherData);
+
+    formatForecastData(fiveDayForecast, currentWeatherData.timezone);
+    formatCurrentWeatherData(currentWeatherData);
+    setLoading(false);
+  }
+
+  function switchUnits() {
+    if (units.system === 'imperial') {
+      setUnits({ system: 'metric', tempUnit: 'C', windUnit: 'm/s' });
+    } else {
+      setUnits({ system: 'imperial', tempUnit: 'F', windUnit: 'mph' });
+    }
+  }
+
   async function fetchData(apiURL: string) {
     const response = await fetch(apiURL);
 
     return await response?.json();
   }
 
-  function getFiveDayForecast(weatherData: { list: []; city: object }) {
-    const reducedList = weatherData.list.reduce(
-      (weatherTimestamps: { dt_txt: string }[], currentTimestamp: { dt_txt: string }) => {
-        const newDate = weatherTimestamps
-          .slice(1)
-          .every((timestamp) => timestamp.dt_txt.split(' ')[0] !== currentTimestamp.dt_txt.split(' ')[0]);
+  function getFiveDayForecast(weatherData: ForecastResponse): { [key: string]: WeatherData[] } {
+    console.log(weatherData);
+    const aggregateTimestamps = weatherData.list.reduce(
+      (weatherTimestamps: { [key: string]: WeatherData[] }, currentTimestamp: WeatherData) => {
+        const timestampDay = new Date(
+          (parseInt(currentTimestamp.dt, 10) + parseInt(weatherData.city.timezone, 10)) * 1000,
+        ).getUTCDate();
 
-        if (newDate) weatherTimestamps.push(currentTimestamp);
+        if (Object.keys(weatherTimestamps).length < 1) weatherTimestamps[timestampDay] = [currentTimestamp];
+
+        let dayPresent = false;
+        for (const weekDay in weatherTimestamps) {
+          if (timestampDay.toString() === weekDay) {
+            weatherTimestamps[weekDay].push(currentTimestamp);
+            dayPresent = true;
+            break;
+          }
+        }
+
+        if (!dayPresent) weatherTimestamps[timestampDay] = [currentTimestamp];
 
         return weatherTimestamps;
       },
-      [],
+      {},
     );
 
-    setForecastData(
-      // @ts-expect-error : Not sure how to fix error
-      reducedList.slice(2).reduce((arr: Array<T>, data) => {
-        arr.push(formatData(weatherData, data));
-        return arr;
-      }, []),
-    );
-
-    return reducedList;
+    return aggregateTimestamps;
   }
 
-  function updateData(weatherData: { list: []; city: { name: string; country: string } }) {
-    // @ts-expect-error : Not sure how to fix error
-    const forecast: Array<{
-      weather: Array<{ description: string; icon: string }>;
-      main: { temp: string; feels_like: string; temp_min: string; temp_max: string; humidity: string };
-      pop: string;
-      wind: { speed: string; deg: string };
-    }> = getFiveDayForecast(weatherData);
+  function formatForecastData(aggregateTimestamps: { [key: string]: WeatherData[] }, timezone: string) {
+    const extremaValues = getExtremaValues(aggregateTimestamps);
+    const forecastList: Array<ForecastListData> = [];
 
-    console.log(weatherData);
+    for (const day in aggregateTimestamps) {
+      for (const timestamp of aggregateTimestamps[day]) {
+        if (timestamp.dt_txt.split(' ')[1].split(':')[0] === '12') {
+          console.log(timestamp.dt);
+          console.log(Date.now().valueOf());
+          forecastList.push({
+            dt: String((parseInt(timestamp.dt, 10) + parseInt(timezone, 10)) * 1000),
+            iconURL: `./src/imgs/weather-icons/${timestamp.weather[0].icon}.svg`,
+            description: timestamp.weather[0].description,
+            tempMin: extremaValues[day].min,
+            tempMax: extremaValues[day].max,
+            tempUnit: units.tempUnit,
+          });
+          break;
+        }
+      }
+    }
 
-    // @ts-expect-error : Not sure how to fix error
-    setSelectedDate(formatData(weatherData, forecast[0]));
-    setLoading(false);
+    setForecastData(forecastList);
   }
 
-  function formatData(response: any, day: any) {
-    return {
-      dt: (parseInt(day.dt, 10) + parseInt(response.city.timezone, 10)) * 1000,
-      iconURL: `./src/imgs/weather-icons/${day.weather[0].icon}.svg`,
-      description: day.weather[0].description,
-      city: response.city.name,
-      country: response.city.country,
-      temp: Math.floor(parseFloat(day.main.temp)).toString(),
-      feelsLike: Math.floor(parseFloat(day.main.feels_like)).toString(),
-      tempMin: Math.floor(parseFloat(day.main.temp_min)).toString(),
-      tempMax: Math.floor(parseFloat(day.main.temp_max)).toString(),
-      tempUnit: 'F',
-      precipitation: day.pop,
-      humidity: day.main.humidity,
-      wind: (Math.floor(parseFloat(day.wind.speed) * 10) / 10).toString(),
-      windUnit: 'mph',
-      windDeg: day.wind.deg,
-    };
+  function formatCurrentWeatherData(currentWeatherData: CurrentWeatherResponse) {
+    setSelectedDate({
+      dt: String((parseInt(currentWeatherData.dt, 10) + parseInt(currentWeatherData.timezone, 10)) * 1000),
+      iconURL: `./src/imgs/weather-icons/${currentWeatherData.weather[0].icon}.svg`,
+      description: currentWeatherData.weather[0].description,
+      city: currentWeatherData.name,
+      country: currentWeatherData.sys.country,
+      temp: String(Math.floor(parseFloat(currentWeatherData.main.temp))),
+      feelsLike: String(Math.floor(parseFloat(currentWeatherData.main.feels_like))),
+      tempMin: String(Math.floor(parseFloat(currentWeatherData.main.temp_min))),
+      tempMax: String(Math.floor(parseFloat(currentWeatherData.main.temp_max))),
+      tempUnit: units.tempUnit,
+      rainfall: currentWeatherData.rain === undefined ? '0 mm/h' : currentWeatherData.rain['1h'],
+      humidity: currentWeatherData.main.humidity,
+      wind: String(Math.floor(parseFloat(currentWeatherData.wind.speed) * 10) / 10),
+      windUnit: units.windUnit,
+      windDeg: currentWeatherData.wind.deg,
+    });
+  }
+
+  function getExtremaValues(aggregateTimestamps: { [key: string]: WeatherData[] }) {
+    const extremaValues: { [key: string]: { min: string; max: string } } = {};
+    for (const day in aggregateTimestamps) {
+      let min = Infinity;
+      let max: number = Number.NEGATIVE_INFINITY;
+
+      for (const timestamp of aggregateTimestamps[day]) {
+        const timestampMin = parseInt(timestamp.main.temp_min, 10);
+        const timestampMax = parseInt(timestamp.main.temp_max, 10);
+
+        min = timestampMin < min ? timestampMin : min;
+        max = timestampMax > max ? timestampMax : max;
+      }
+
+      extremaValues[day] = { min: String(min), max: String(max) };
+    }
+
+    return extremaValues;
   }
 
   return (
@@ -142,7 +202,7 @@ function App() {
         <span className="error">Error!</span>
       </form>
       {!loading && <SelectedDateDisplay info={selectedDate as SelectedDateTemplate} />}
-      {!loading && <ForecastList forecastData={forecastData as Array<SelectedDateTemplate>} />}
+      {!loading && <ForecastList forecastData={forecastData as Array<ForecastListData>} />}
     </div>
   );
 }

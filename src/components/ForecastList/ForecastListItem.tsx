@@ -7,7 +7,7 @@ function ForecastListItem(props: { data: SelectedDateTemplate }) {
 
   return (
     <div className="forecast-item">
-      <header className="day">{weekDays[new Date(data.dt).getUTCDay()]}</header>
+      <header className="day">{weekDays[new Date(parseInt(data.dt, 10)).getUTCDay()]}</header>
       <img src={data.iconURL} alt={data.description} className="weather-icon" />
       <p className="temp-high">
         High: {data.tempMax}°{data.tempUnit}

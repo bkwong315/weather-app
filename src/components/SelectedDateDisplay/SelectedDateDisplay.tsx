@@ -12,7 +12,7 @@ function SelectedDateDisplay(props: { info: SelectedDateTemplate }) {
     tempMin,
     tempMax,
     tempUnit,
-    precipitation,
+    rainfall,
     humidity,
     wind,
     windUnit,
@@ -45,8 +45,8 @@ function SelectedDateDisplay(props: { info: SelectedDateTemplate }) {
             </p>
           </div>
           <div className="precipitation-wrapper">
-            <p>Precipitation:</p>
-            <p>{precipitation}%</p>
+            <p>Rainfall:</p>
+            <p>{rainfall}</p>
           </div>
           <div className="humidity-wrapper">
             <p>Humidity:</p>

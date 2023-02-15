@@ -9,7 +9,7 @@ interface SelectedDateTemplate {
   tempMin: string;
   tempMax: string;
   tempUnit: string;
-  precipitation: string;
+  rainfall: string;
   humidity: string;
   wind: string;
   windUnit: string;
