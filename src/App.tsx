@@ -15,6 +15,7 @@ function App() {
   const [units, setUnits] = useState({ system: 'imperial', tempUnit: 'F', windUnit: 'mph' });
   const [selectedDate, setSelectedDate] = useState<SelectedDateTemplate>();
   const [forecastData, setForecastData] = useState<Array<ForecastListData>>();
+  const [lastQuery, setLastQuery] = useState('');
 
   const API_KEY = 'a8d2cbc847ed40ce311d65394e47f905';
 
@@ -23,6 +24,8 @@ function App() {
     const cityInput = document.querySelector('#city') as HTMLInputElement;
     const searchIcon = document.querySelector('#city ~ img');
     const errorDisplay = document.querySelector('.error');
+    const imperialBtn = document.querySelector('.unit-control > span:first-child');
+    const metricBtn = document.querySelector('.unit-control > span:last-child');
 
     searchForm?.addEventListener('submit', formSubmit);
     searchIcon?.addEventListener('click', submitQuery);
@@ -36,6 +39,9 @@ function App() {
       const query = cityInput.value;
       sendQuery(query);
     }
+
+    imperialBtn?.addEventListener('click', switchUnits);
+    metricBtn?.addEventListener('click', switchUnits);
 
     async function sendQuery(query: string) {
       errorDisplay?.classList.remove('visible');
@@ -66,7 +72,28 @@ function App() {
         console.error(error);
       });
 
+      setLastQuery(query);
       updateData(currentWeatherData, weatherData);
+    }
+
+    function switchUnits(event: Event) {
+      const imperialBtn = document.querySelector('.unit-control > span:first-child');
+      const metricBtn = document.querySelector('.unit-control > span:last-child');
+      const selectedSystem = event.target instanceof HTMLElement ? event.target.dataset.system : 'imperial';
+
+      if (selectedSystem === units.system) return;
+
+      if (selectedSystem === 'imperial') {
+        imperialBtn?.classList.add('selected');
+        metricBtn?.classList.remove('selected');
+        setUnits({ system: 'imperial', tempUnit: 'F', windUnit: 'mph' });
+      } else {
+        metricBtn?.classList.add('selected');
+        imperialBtn?.classList.remove('selected');
+        setUnits({ system: 'metric', tempUnit: 'C', windUnit: 'm/s' });
+      }
+
+      sendQuery(lastQuery);
     }
 
     sendQuery('los angeles');
@@ -74,8 +101,11 @@ function App() {
     return function cleanup() {
       searchForm?.removeEventListener('submit', formSubmit);
       searchIcon?.removeEventListener('click', submitQuery);
+      imperialBtn?.removeEventListener('click', switchUnits);
+      metricBtn?.removeEventListener('click', switchUnits);
     };
-  }, []);
+    1;
+  }, [lastQuery, units]);
 
   function updateData(currentWeatherData: CurrentWeatherResponse, weatherData: ForecastResponse) {
     const fiveDayForecast = getFiveDayForecast(weatherData);
@@ -83,14 +113,6 @@ function App() {
     formatForecastData(fiveDayForecast, currentWeatherData.timezone);
     formatCurrentWeatherData(currentWeatherData);
     setLoading(false);
-  }
-
-  function switchUnits() {
-    if (units.system === 'imperial') {
-      setUnits({ system: 'metric', tempUnit: 'C', windUnit: 'm/s' });
-    } else {
-      setUnits({ system: 'imperial', tempUnit: 'F', windUnit: 'mph' });
-    }
   }
 
   async function fetchData(apiURL: string) {
@@ -192,12 +214,20 @@ function App() {
 
   return (
     <div className="App">
-      <form className="search-container">
-        <input type="text" name="city" id="city" placeholder="Enter City or Country" autoComplete="off" />
-        <img src="./src/imgs/search.svg" alt="search" className="submit-btn" />
-        <button type="submit"></button>
-        <span className="error">Error!</span>
-      </form>
+      <div className="search-container">
+        <div className="unit-control">
+          <span className="selected" data-system="imperial">
+            °F
+          </span>{' '}
+          | <span data-system="metric">°C</span>
+        </div>
+        <form className="search-bar">
+          <input type="text" name="city" id="city" placeholder="Enter City or Country" autoComplete="off" />
+          <img src="./src/imgs/search.svg" alt="search" className="submit-btn" />
+          <button type="submit"></button>
+          <span className="error">Error!</span>
+        </form>
+      </div>
       {!loading && <SelectedDateDisplay info={selectedDate as SelectedDateTemplate} />}
       {!loading && <ForecastList forecastData={forecastData as Array<ForecastListData>} />}
     </div>
