@@ -11,7 +11,7 @@ import ForecastList from './components/ForecastList/ForecastList';
 import './App.scss';
 
 function App() {
-  const [loading, setLoading] = useState<boolean>(true);
+  const [firstLoad, setFirstLoad] = useState<boolean>(true);
   const [units, setUnits] = useState({ system: 'imperial', tempUnit: 'F', windUnit: 'mph' });
   const [selectedDate, setSelectedDate] = useState<SelectedDateTemplate>();
   const [forecastData, setForecastData] = useState<Array<ForecastListData>>();
@@ -43,11 +43,17 @@ function App() {
     imperialBtn?.addEventListener('click', switchUnits);
     metricBtn?.addEventListener('click', switchUnits);
 
+    if (firstLoad) {
+      sendQuery('los angeles');
+    } else {
+      sendQuery(lastQuery);
+    }
+
     async function sendQuery(query: string) {
       errorDisplay?.classList.remove('visible');
 
       const geocodeData = await fetchData(
-        `http://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=1&appid=${API_KEY}`,
+        `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=1&appid=${API_KEY}`,
       ).catch((error) => {
         console.error(error);
       });
@@ -67,7 +73,7 @@ function App() {
       });
 
       const weatherData = await fetchData(
-        `http://api.openweathermap.org/data/2.5/forecast?lat=${geocodeData[0].lat}&lon=${geocodeData[0].lon}&units=${units.system}&appid=${API_KEY}`,
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${geocodeData[0].lat}&lon=${geocodeData[0].lon}&units=${units.system}&appid=${API_KEY}`,
       ).catch((error) => {
         console.error(error);
       });
@@ -92,11 +98,7 @@ function App() {
         imperialBtn?.classList.remove('selected');
         setUnits({ system: 'metric', tempUnit: 'C', windUnit: 'm/s' });
       }
-
-      sendQuery(lastQuery);
     }
-
-    sendQuery('los angeles');
 
     return function cleanup() {
       searchForm?.removeEventListener('submit', formSubmit);
@@ -104,7 +106,6 @@ function App() {
       imperialBtn?.removeEventListener('click', switchUnits);
       metricBtn?.removeEventListener('click', switchUnits);
     };
-    1;
   }, [lastQuery, units]);
 
   function updateData(currentWeatherData: CurrentWeatherResponse, weatherData: ForecastResponse) {
@@ -112,7 +113,7 @@ function App() {
 
     formatForecastData(fiveDayForecast, currentWeatherData.timezone);
     formatCurrentWeatherData(currentWeatherData);
-    setLoading(false);
+    setFirstLoad(false);
   }
 
   async function fetchData(apiURL: string) {
@@ -228,8 +229,8 @@ function App() {
           <span className="error">Error!</span>
         </form>
       </div>
-      {!loading && <SelectedDateDisplay info={selectedDate as SelectedDateTemplate} />}
-      {!loading && <ForecastList forecastData={forecastData as Array<ForecastListData>} />}
+      {!firstLoad && <SelectedDateDisplay info={selectedDate as SelectedDateTemplate} />}
+      {!firstLoad && <ForecastList forecastData={forecastData as Array<ForecastListData>} />}
     </div>
   );
 }
