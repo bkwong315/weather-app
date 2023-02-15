@@ -158,7 +158,7 @@ function App() {
         if (timestamp.dt_txt.split(' ')[1].split(':')[0] === '12') {
           forecastList.push({
             dt: String((parseInt(timestamp.dt, 10) + parseInt(timezone, 10)) * 1000),
-            iconURL: `./src/imgs/weather-icons/${timestamp.weather[0].icon}.svg`,
+            iconURL: `./imgs/weather-icons/${timestamp.weather[0].icon}.svg`,
             description: timestamp.weather[0].description,
             tempMin: extremaValues[day].min,
             tempMax: extremaValues[day].max,
@@ -175,7 +175,7 @@ function App() {
   function formatCurrentWeatherData(currentWeatherData: CurrentWeatherResponse) {
     setSelectedDate({
       dt: String((parseInt(currentWeatherData.dt, 10) + parseInt(currentWeatherData.timezone, 10)) * 1000),
-      iconURL: `./src/imgs/weather-icons/${currentWeatherData.weather[0].icon}.svg`,
+      iconURL: `./imgs/weather-icons/${currentWeatherData.weather[0].icon}.svg`,
       description: currentWeatherData.weather[0].description,
       city: currentWeatherData.name,
       country: currentWeatherData.sys.country,
@@ -223,7 +223,7 @@ function App() {
         </div>
         <form className="search-bar">
           <input type="text" name="city" id="city" placeholder="Enter City or Country" autoComplete="off" />
-          <img src="./src/imgs/search.svg" alt="search" className="submit-btn" />
+          <img src="./imgs/search.svg" alt="search" className="submit-btn" />
           <button type="submit"></button>
           <span className="error">Error!</span>
         </form>
