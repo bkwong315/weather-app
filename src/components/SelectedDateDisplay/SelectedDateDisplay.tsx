@@ -38,35 +38,35 @@ function SelectedDateDisplay(props: { info: SelectedDateTemplate }) {
       </p>
       <div className="additional-info">
         <div className="left-info">
-          <div className="wind-wrapper">
+          <div className="wind-wrapper info-wrapper">
             <p>Wind:</p>
             <p>
               {wind} {windUnit} {getSector(parseInt(windDeg))}
             </p>
           </div>
-          <div className="precipitation-wrapper">
+          <div className="precipitation-wrapper info-wrapper">
             <p>Rainfall:</p>
             <p>{rainfall}</p>
           </div>
-          <div className="humidity-wrapper">
+          <div className="humidity-wrapper info-wrapper">
             <p>Humidity:</p>
             <p>{humidity}%</p>
           </div>
         </div>
         <div className="right-info">
-          <div className="feels-like-wrapper">
+          <div className="feels-like-wrapper info-wrapper">
             <p>Feels Like:</p>
             <p>
               {feelsLike}°{tempUnit}
             </p>
           </div>
-          <div className="temp-max-wrapper">
+          <div className="temp-max-wrapper info-wrapper">
             <p>High:</p>
             <p>
               {tempMax}°{tempUnit}
             </p>
           </div>
-          <div className="temp-min-wrapper">
+          <div className="temp-min-wrapper info-wrapper">
             <p>Low:</p>
             <p>
               {tempMin}°{tempUnit}

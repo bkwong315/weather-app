@@ -42,9 +42,9 @@
     .right-info {
       display: flex;
       flex-direction: column;
-      width: 100%;
+      flex: 1 1 auto;
 
-      & * {
+      & .info-wrapper {
         display: flex;
         justify-content: space-between;
         gap: 1rem;
