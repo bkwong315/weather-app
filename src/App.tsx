@@ -125,9 +125,7 @@ function App() {
   function getFiveDayForecast(weatherData: ForecastResponse): { [key: string]: WeatherData[] } {
     const aggregateTimestamps = weatherData.list.reduce(
       (weatherTimestamps: { [key: string]: WeatherData[] }, currentTimestamp: WeatherData) => {
-        const timestampDay = new Date(
-          (parseInt(currentTimestamp.dt, 10) + parseInt(weatherData.city.timezone, 10)) * 1000,
-        ).getUTCDate();
+        const timestampDay = getTimezoneAdjustedDate(currentTimestamp.dt, weatherData.city.timezone).getUTCDate();
 
         if (Object.keys(weatherTimestamps).length < 1) weatherTimestamps[timestampDay] = [currentTimestamp];
 
@@ -156,7 +154,9 @@ function App() {
 
     for (const day in aggregateTimestamps) {
       for (const timestamp of aggregateTimestamps[day]) {
-        if (timestamp.dt_txt.split(' ')[1].split(':')[0] === '12') {
+        const timezoneAdjustedHours = getTimezoneAdjustedDate(timestamp.dt, timezone).getUTCHours();
+
+        if (timezoneAdjustedHours === 11 || timezoneAdjustedHours === 12 || timezoneAdjustedHours === 13) {
           forecastList.push({
             dt: String((parseInt(timestamp.dt, 10) + parseInt(timezone, 10)) * 1000),
             iconURL: `./imgs/weather-icons/${timestamp.weather[0].icon}.svg`,
@@ -211,6 +211,10 @@ function App() {
     }
 
     return extremaValues;
+  }
+
+  function getTimezoneAdjustedDate(timeInSec: string, timezone: string) {
+    return new Date((parseInt(timeInSec, 10) + parseInt(timezone, 10)) * 1000);
   }
 
   return (
